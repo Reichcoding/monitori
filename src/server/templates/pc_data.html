@@ -1,0 +1,519 @@
+{% extends "base.html" %}
+{% block content %}
+<h1 class="h3 mb-4 text-gray-800">
+    {% if info[5]==None %}
+    {{info[1]}}
+    {% else %}
+        {{info[5]}} <span class="h5 text-gray-600">{{info[1]}}</span> 
+    {% endif %}
+    <span id="pc_show_buttons" hidden>
+        <a href="#" class="btn btn-danger btn-circle btn-md ml-3" data-toggle="modal" data-target="#turnOff">
+            <i class="fas fa-power-off"></i>
+        </a>
+        <a href="#" class="btn btn-warning btn-circle btn-md ml-3" data-toggle="modal" data-target="#restart">
+            <i class="fas">&#xf021;</i>
+        </a>
+        <a href="#" class="btn btn-info btn-circle btn-md ml-3" data-toggle="modal" data-target="#sendMore">
+            <i class="fas fa-plus"></i>
+        </a>
+        <a href="#" class="btn btn-secondary btn-circle btn-md ml-3" data-toggle="modal" data-target="#processList">
+            <i class="fas fa-bars"></i>
+        </a>
+    
+    </span>
+    <a class="btn btn-info btn-icon-split position-absolute ml-3" id="message" style="display: none;" onclick="hide_message()">
+        <span class="icon text-white-40">
+            <i class="fas fa-info-circle"></i>
+        </span>
+        <span class="text" id="session_message">{{get_flashed_messages()[0]}}</span>
+    </a>
+    
+</h1>
+    <div class="row">
+        <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 mx-auto">
+            <div class="card shadow mb-4 ">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">Информация</h6>
+                </div>
+                <div class="card-body">
+                    <div class="change_description">
+                        <form action="describe_pc_{{info[0]}}" method="post">
+                            <label class="form-label">Комментарий</label>
+                            <div class="w-100 mx-auto">
+                                <div class="row">
+                                    <div class="col-10">
+                                        <input type="text" class="form-control" name="name" placeholder="Комментарий"
+                                            value="{% if info[5]==None %}{% else %}{{info[5]}}{% endif %}">
+                                    </div>
+                                    <div class="col-2">
+                                        <input type="submit" class="btn btn-primary" value="+">
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                        <hr>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">Имя:</label>
+                            <span>{{info[1]}}</span>
+                        </div>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">Ip:</label>
+                            <span>{{info[2]}}</span>
+                        </div>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">ID в системе:</label>
+                            <span id="pc_id_pc_data">{{info[0]}}</span>
+                        </div>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">Частота процессора:</label>
+                            <span>{{info[4]}} MHz</span>
+                        </div>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">Кол-во ОЗУ:</label>
+                            <span>{{info[3]}} Gb</span>
+                        </div>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">Кол-во ПЗУ:</label>
+                            <span>{{info[6]}} Gb</span>
+                        </div>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">Дата появления:</label>
+                            <span>{{info[7]}}</span>
+                        </div>
+                        <div>
+                            <label class="text-gray-800 font-weight-bold form-label">Батарея: </label>
+                            <span>{% if info[8] == 0%}
+                                Нет
+                                {% else %}
+                                Есть
+                                {%endif%}
+                            </span>
+                        </div>
+                        <div>
+                            <!-- <div class="row"> -->
+                                <a class=" btn btn-danger btn-icon-split ml-3" href="#" data-toggle="modal" data-target="#deletePc">
+                                    <span class="icon text-white-40">
+                                        <i class="fas fa-trash"></i>
+                                    </span>
+                                    <span class="text">Удалить из базы данных</span>
+                                </a>
+                                <a class=" btn btn-primary btn-icon-split ml-3" href="#" data-toggle="modal" data-target="#totalGraph">
+                                    <span class="icon text-white-40">
+                                        <i class="fas fa-info"></i>
+                                    </span>
+                                    <span class="text">Графики за все время</span>
+                                </a>
+                            <!-- </div> -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 mx-auto ">
+            <div class="card shadow mb-4 ">
+                
+                <div class="card-header py-3">
+                    
+                    
+                    <h6 class="m-0 font-weight-bold text-primary">График загрузка процессора </h6>
+                    Даты графиков: <input type="date" class="col-6 form-control" placeholder="дата" value="" min="{{min_date}}" max="{{max_date}}" id="datepicker_charts">
+
+                </div>
+                <div class="card-body" >
+                    <div class="chart-area" style="position:relative;">
+                        <canvas id="cpu_chart" ></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 mx-auto">
+            <div class="card shadow mb-4 ">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">График загрузки оперативной памяти</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="ram_chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-xs-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 mx-auto">
+            <div class="card shadow mb-4 ">
+                <div class="card-header py-3">
+                    <h6 class="m-0 font-weight-bold text-primary">График загрузки дискового пространства</h6>
+                    
+                </div>
+                <div class="card-body">
+                    <div class="chart-area">
+                        <canvas id="disk_chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Записи данных
+                <a class=" btn btn-outline-info btn-icon-split ml-3" onclick="download_graph()">
+                    <span class="text">Выгрузить текущие данные</span>
+                </a>
+                <a class=" btn btn-outline-warning btn-icon-split ml-3" onclick="download_graph_all()">
+                    <span class="text">Выгрузить все данные</span>
+                </a>
+            </h6>
+            
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dt-table" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>Время</th>
+                            <th>ЦПУ%</th>
+                            <th>ОЗУ%</th>
+                            <th>ПЗУ%</th>
+                            <th>ОЗУ ГБ</th>
+                            <th>ПЗУ ГБ</th>
+                            {% if info[8]==0 %}
+                            {% else %}
+                                <th>Данные Батареи</th>
+                            {% endif %}
+                            
+                        </tr>
+                    </thead>
+                    <tfoot>
+                        <tr>
+                            <th>Время</th>
+                            <th>ЦПУ%</th>
+                            <th>ОЗУ%</th>
+                            <th>ПЗУ%</th>
+                            <th>ОЗУ ГБ</th>
+                            <th>ПЗУ ГБ</th>
+                            {% if info[8]==0 %}
+                            {% else %}
+                                <th>Данные Батареи</th>
+                            {% endif %}
+                        </tr>
+                    </tfoot>
+                    
+                    <tbody>
+                        
+                    </tbody>
+                        
+                </table>
+            </div>
+        </div>
+    </div>
+     <!-- Pc delete Modal-->
+     <div class="modal fade" id="deletePc" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Удалить компьютер
+                         {% if info[5]!=None %}{{info[5]}}{%endif%} {{info[1]}}</h5>
+                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">×</span>
+                     </button>
+                 </div>
+                 <div class="modal-body">Действие необратимо, произойдет удаление как о всех записях данных компьютера,
+                     так и о самом компьютере и его описании.</div>
+                 <div class="modal-footer">
+                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+                     <a class="btn btn-danger" href="/delete_pc_{{info[0]}}">Удалить</a>
+                 </div>
+             </div>
+         </div>
+     </div>
+     <div class="modal fade" id="turnOff" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Завершить работу
+                         {% if info[5]!=None %}{{info[5]}}{%endif%} {{info[1]}}</h5>
+                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">×</span>
+                     </button>
+                 </div>
+                 <div class="modal-body">Подтверждение приведет к немедленному завершению работы выбранного ПК. Пожалуйства, убедитесь что данные сохранены, и только после этого отключейте.</div>
+                 <div class="modal-footer">
+                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+                     <a class="btn btn-danger" href="/turn_off_pc_{{info[0]}}">Отключить</a>
+                 </div>
+             </div>
+         </div>
+     </div>
+     <div class="modal fade" id="restart" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Перезагрузить
+                         {% if info[5]!=None %}{{info[5]}}{%endif%} {{info[1]}}</h5>
+                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">×</span>
+                     </button>
+                 </div>
+                 <div class="modal-body">Подтверждение приведет к немедленной выбранного ПК. Пожалуйства, убедитесь что данные сохранены, и только после этого перезагружайте.</div>
+                 <div class="modal-footer">
+                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+                     <a class="btn btn-warning" href="/restart_pc_{{info[0]}}">Перезагрузить</a>
+                 </div>
+             </div>
+         </div>
+     </div>
+     <div class="modal fade" id="sendMore" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Управление
+                         {% if info[5]!=None %}{{info[5]}}{%endif%} {{info[1]}}</h5>
+                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">×</span>
+                     </button>
+                 </div>
+                 <div class="modal-body">
+                    <form action="send_message_pc_{{info[0]}}" method="post">
+                        <label class="form-label">Уведомление</label>
+                        <div class="w-100 mx-auto">
+                            <div class="row">
+                                <div class="col-9">
+                                    <input type="text" class="form-control" name="msg" placeholder="Уведомление"
+                                        value="">
+                                </div>
+                                <div class="col-3">
+                                    <input type="submit" class="btn btn-primary" value="Отправить">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                    <form action="send_command_pc_{{info[0]}}" method="post" class="mt-3">
+                        <label class="form-label">Команда консоли</label>
+                        <div class="w-100 mx-auto">
+                            <div class="row">
+                                <div class="col-9">
+                                    <input type="text" class="form-control" name="cmd" placeholder="Команда консоли"
+                                        value="">
+                                </div>
+                                <div class="col-3">
+                                    <input type="submit" class="btn btn-danger" value="Отправить">
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                 </div>
+                 <div class="modal-footer">
+                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+                 </div>
+             </div>
+         </div>
+     </div>
+     <div class="modal fade" id="processList" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Список процессов.
+                         {% if info[5]!=None %}{{info[5]}}{%endif%} {{info[1]}}</h5>
+                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">×</span>
+                     </button>
+                 </div>
+                 <div class="modal-body" id="process_list"></div>
+                 <div class="modal-footer">
+                     <button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+                 </div>
+             </div>
+         </div>
+     </div>
+     <div class="modal fade" id="totalGraph" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel"
+         aria-hidden="true">
+         <div class="modal-dialog" role="document">
+             <div class="modal-content">
+                 <div class="modal-header">
+                     <h5 class="modal-title" id="exampleModalLabel">Общий график.
+                         {% if info[5]!=None %}{{info[5]}}{%endif%} {{info[1]}}</h5>
+                     <button class="close" type="button" data-dismiss="modal" aria-label="Close">
+                         <span aria-hidden="true">×</span>
+                     </button>
+                 </div>
+                 <div class="modal-body">
+                    <div class="chart-area" style="position:relative;">
+                        <div class="row">
+                            <div class="col-6">
+                                <input type="date" class="form-control" placeholder="дата" value="{{min_date}}" min="{{min_date}}" max="{{max_date}}" id="datepicker_total_min">
+                            </div>
+                            <div class="col-6">
+                                <input type="date" class="form-control" placeholder="дата" value="{{max_date}}" min="{{min_date}}" max="{{max_date}}" id="datepicker_total_max">
+                            </div>
+                        </div>
+                        
+                        
+                        <canvas id="total_chart" ></canvas>
+                    </div>
+                 </div>
+                 <div class="modal-footer">
+                    <button class="btn btn-secondary" type="button" data-dismiss="modal">Отмена</button>
+                 </div>
+             </div>
+         </div>
+     </div>
+
+<script src="../static/vendor/jquery.min.js"></script>
+<script src="../static/vendor/Chart.min.js"></script>
+<script src="../static/vendor/datatables.js"></script>
+<script>
+    var table_data = [
+        {% if info[8]==0 %}
+            {% for i in data %}
+                [
+                    "{{i[1]}}",
+                    "<span class='{%if i[3]>90 %}font-weight-bold text-danger{%elif i[3]>75%}font-weight-bold text-warning{%else%}{%endif%}'>{{i[3]}}%</span>",
+                    "<span class='{%if i[4]>90 %}font-weight-bold text-danger{%elif i[4]>75%}font-weight-bold text-warning{%else%}{%endif%}'>{{i[4]}}%</span>",
+                    "<span class='{%if i[5]>90 %}font-weight-bold text-danger{%elif i[5]>75%}font-weight-bold text-warning{%else%}{%endif%}'>{{i[5]}}%</span>",
+                    "<span class='{%if i[4]>90 %}font-weight-bold text-danger{%elif i[4]>75%}font-weight-bold text-warning{%else%}{%endif%}'>{{i[6]}}Gb / {{info[3]}}Gb</span>",
+                    "<span class='{%if i[5]>90 %}font-weight-bold text-danger{%elif i[5]>75%}font-weight-bold text-warning{%else%}{%endif%}'>{{i[7]}}Gb / {{info[6]}}Gb</span>",
+                    {% if i[8] %} 
+                    "<span class='{%if i[8]<20 %}font-weight-bold text-danger{%elif i[8]>10%}font-weight-bold text-warning{%else%}{%endif%}'>{{i[8]}}%</span>"
+                    {% endif %}
+                ],
+            {% endfor %}
+        
+        {% endif %}
+        ]
+    // data.shift()
+    $('#dt-table').DataTable( {
+        data: table_data,
+        // render: (data,row)=>render_data(data,row)
+        render: {
+            "_": "plain",
+            "filter": "filter",
+            "display": "display"
+        },
+        "order": [],
+    } );
+    function render_data(data,row){
+        return `<div class="text-danger">${data}</div>`
+    }
+
+</script>
+
+<script src="../static/vendor/jquery.min.js"></script>
+<script src="../static/js/charts.js"></script>
+<script src="../static/vendor/jquery.easing.min.js"></script>
+<script src="../static/js/processlist.js"></script>
+<script>
+    
+    
+    var charts_cpu_data = [
+        {% for data in chcpu %}
+            {time:"{{data[0]}}",load:{{data[1]}} },
+        {% endfor %}
+    ]
+    var charts_ram_data = [
+        {% for data in chram %}
+            {time:"{{data[0]}}",load:{{data[1]}} },
+        {% endfor %}
+    ]
+    var charts_disk_data = [
+        {% for data in chdisk %}
+            {time:"{{data[0]}}",load:{{data[1]}} },
+        {% endfor %}
+    ]
+
+    generate_chart("ram_chart",charts_ram_data)
+    generate_chart("cpu_chart",charts_cpu_data)
+    generate_chart("disk_chart",charts_disk_data)
+    this_pc_id = {{info[0]}}
+    setInterval(function(){
+        if(pcs[this_pc_id]){
+            $("#pc_show_buttons")[0].hidden = false
+            updateProcessList(this_pc_id)
+        }else{
+            $("#pc_show_buttons")[0].hidden = true
+            
+        } 
+    },1000)
+    function download_graph_all(){
+
+
+        let csvContent = "data:text/csv;charset=utf-8,";
+
+        table_data.forEach(function(rowArray) {
+            let text = rowArray.join(",");
+            var div = document.createElement("div");
+            div.innerHTML = text;
+            var data = div.textContent || div.innerText || "";
+            
+            csvContent += data + "\r\n";
+        });
+        var encodedUri = encodeURI(csvContent);
+        window.open(encodedUri);
+    }
+    function download_graph(){
+        let csvContent = "data:text/csv;charset=utf-8,";
+        datas = []
+        trs = $("#dt-table tbody tr")
+        for(let i = 0 ; i<trs.length;i++){
+            datas[i] = []
+            trs[i].querySelectorAll("td").forEach(function(td){
+                datas[i].push(td.innerText)
+            })
+        }
+        datas.forEach(function(rowArray) {
+            let text = rowArray.join(",");
+        
+            csvContent += text + "\r\n";
+        });
+        var encodedUri = encodeURI(csvContent);
+        window.open(encodedUri);
+    }
+</script>
+<script>
+    function update_charts_by_date(datas){
+        axios.post("/update_charts_{{info[0]}}",{date:datas}).then(res=>{
+            console.log(res.data)
+            charts_cpu_data = res.data.cpu
+            charts_disk_data = res.data.disk
+            charts_ram_data = res.data.ram
+            generate_chart("ram_chart",charts_ram_data)
+            generate_chart("cpu_chart",charts_cpu_data)
+            generate_chart("disk_chart",charts_disk_data)
+        })
+    }
+    datepicker_charts.addEventListener("change", function(event){
+        date = event.target.value.split("-").reverse().join(".")
+        update_charts_by_date(date);
+    });
+
+
+    function update_minmax_by_date(){
+        min_date = datepicker_total_min.value.split("-").reverse().join(".")
+        max_date = datepicker_total_max.value.split("-").reverse().join(".")
+        axios.post("/total_chart_{{info[0]}}",{min_date:min_date,max_date:max_date}).then(res=>{
+            console.log(res.data)
+            charts_cpu_data = res.data.cpu
+            charts_disk_data = res.data.disk
+            charts_ram_data = res.data.ram
+            generate_total_chart("total_chart",charts_cpu_data,charts_ram_data,charts_disk_data,charts_disk_data)
+        })
+    }
+
+    datepicker_total_min.addEventListener("change", function(event){
+        update_minmax_by_date();
+    });
+    datepicker_total_max.addEventListener("change",function(event){
+        update_minmax_by_date();
+    })
+    $( document ).ready(function() {
+        update_minmax_by_date();
+    });
+
+    
+</script>
+{% endblock %}

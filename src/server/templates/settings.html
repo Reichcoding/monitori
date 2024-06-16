@@ -1,0 +1,195 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="h3 mb-4 text-gray-800">Настройки
+
+
+    <a class="btn btn-info btn-icon-split position-absolute ml-3" id="message" style="display: none;" onclick="hide_message()">
+        <span class="icon text-white-40">
+            <i class="fas fa-info-circle"></i>
+        </span>
+        <span class="text" id="session_message">{{get_flashed_messages()[0]}}</span>
+    </a>
+</div>
+
+
+<div class="row justify-content-center equal-height-row vh-100">
+    <div class="col-12 col-md-10 col-lg-6 col-xl-4 equal-height-col ">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Настройки веб-интерфейса</h6>
+            </div>
+            <div class="card-body">
+                <div class="change_pass">
+                    <form action="/change_pass" method="POST">
+                        <div class="mb-3">
+                          <label class="form-label">Сменить пароль</label>
+                          <div class="row">
+                            <div class="w-100 mx-auto">
+                              <input type="password" class="form-control" name="password" placeholder="*****">
+                              
+                            </div>
+                          </div>
+                        </div>
+                        <div class="mt-3 mb-3">
+                            <button type="submit" class="btn btn-primary">Изменить</button>
+                        </div>
+                    </form> 
+                    <div class="mb-3">
+                        <label class="form-label">Скорость обновления данных в мониторинге</label>
+                        <div class="row">
+                            <div class="w-100 mx-auto">
+                            <input type="number" class="form-control" id="data_update_speed" value="5" min="1" max="600">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Список "Зеленых" процессов</label>
+                        <div class="row">
+                            <div class="w-100 mx-auto">
+                                <textarea class="form-control" id="process_green_list" rows="1"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Список "Желтых" процессов</label>
+                        <div class="row">
+                            <div class="w-100 mx-auto">
+                                <textarea class="form-control" id="process_yellow_list" rows="1"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Список "Красных" процессов</label>
+                        <div class="row">
+                            <div class="w-100 mx-auto">
+                                <textarea class="form-control" id="process_red_list" rows="1"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-label text-xs text-gray-600 mt-1 ml-1">Процессы разделяются новой строкой или запятой</div>
+                    <div class="form-label text-xs text-gray-600 mt-1 ml-1">Изменение происходит в реальном времени</div>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-12 col-md-10 col-lg-6 col-xl-4 equal-height-col ">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Настройки сервера</h6>
+            </div>
+            <div class="card-body">
+                
+                <div class="change_settings">
+                    <form action="/change_settings" method="POST">
+                        <div class="mb-3">
+                          <label class="form-label">Сменить IP сервера</label>
+                          <div class="row mb-3">
+                            <div class="w-100">
+                              <input type="text" class="form-control" name="ip" placeholder="192.168.0.100" value="{{cfg.ip}}">
+                            </div>
+                          </div>
+                          <label class="form-label">Сменить Порт сервера</label>
+                          <div class="row mb-3">
+                            <div class="w-100">
+                              <input type="text" class="form-control" name="port" placeholder="4466" value="{{cfg.port}}">
+                            </div>
+                          </div>
+                          
+                            <div class="row mb-3">
+                                <div class="w-100">
+                                    <div class="row">
+                                        <div class="col-8 ml-3">
+                                            <label class="form-label">Записывать данные в БД?</label>
+                                        </div>
+                                        <div class="col-3">
+                                            <input type="checkbox" class="form-control" id="regdata" name="registrate_data" {% if cfg.registrate_data == "1" %}checked="checked"{% else %} {% endif %} />
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div id="reg_speed_form">
+                            <label class="form-label">Скорость регистрации данных в базу данных(сек)</label>
+                                <div class="row mb-3">
+                                    <div class="w-100">
+                                    <input type="number" class="form-control" name="data_registration_speed" min="10" max="600" placeholder="30" value="{{cfg.data_registration_speed}}">
+                                    </div>
+                                </div>
+                            </div>
+                            <label class="form-label">Скорость проверки отключения пк(сек)</label>
+                            <div class="row mb-3">
+                                <div class="w-100">
+                                <input type="number" class="form-control" name="data_check_expire" placeholder="5" value="{{cfg.data_check_expire}}">
+                                </div>
+                            </div>
+                            <label class="form-label">Интервал для удаления отключенного пк(сек)</label>
+                            <div class="row mb-3">
+                                <div class="w-100">
+                                <input type="number" class="form-control" name="data_expire_rate" placeholder="5" value="{{cfg.data_expire_rate}}">
+                                </div>
+                            </div>
+                            <label class="form-label">Секретный ключ приложения</label>
+                            <div class="row mb-3">
+                                <div class="w-100">
+                                <input type="password" class="form-control" name="secret_key" placeholder="*****">
+                                </div>
+                            </div>
+                          
+                        </div>
+
+                        <div class="mt-3">
+                            <button type="submit" class="btn btn-primary">Применить</button>
+                        </div>
+                    </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="../static/vendor/jquery.min.js"></script>
+
+<script> 
+    if({{cfg.registrate_data}} != 1){
+        $("#reg_speed_form")[0].hidden = true;
+    }else{
+        $("#reg_speed_form")[0].hidden = false;
+    }
+    $("#regdata")[0].addEventListener("change",()=>{
+        if(!$("#regdata")[0].checked){
+            $("#reg_speed_form")[0].hidden = true;
+           // $("#reg_speed_form")[0].fadeOut()
+        }else{
+            $("#reg_speed_form")[0].hidden = false;
+            //$("#reg_speed_form")[0].fadeIn()
+        }
+    })
+    if(localStorage.getItem("data_update_speed")== null){
+        localStorage.setItem("data_update_speed",5)
+    }
+    $("#data_update_speed")[0].value = localStorage.getItem("data_update_speed")
+    $("#data_update_speed")[0].addEventListener("change",()=>{
+        localStorage.setItem("data_update_speed",parseInt($("#data_update_speed")[0].value))
+    })
+
+    process_green_list.value = localStorage.getItem("green_process")
+    process_yellow_list.value = localStorage.getItem("yellow_process")
+    process_red_list.value = localStorage.getItem("red_process")
+
+    $("#process_green_list")[0].addEventListener("change",()=>{
+        stripped = process_green_list.value.split("\n").join(",").split(",")
+        localStorage.setItem("green_process",stripped)
+    })
+    $("#process_yellow_list")[0].addEventListener("change",()=>{
+        stripped = process_yellow_list.value.split("\n").join(",").split(",")
+        localStorage.setItem("yellow_process",stripped)
+    })
+    $("#process_red_list")[0].addEventListener("change",()=>{
+        stripped = process_red_list.value.split("\n").join(",").split(",")
+        localStorage.setItem("red_process",stripped)
+        
+    })
+    
+</script>
+{% endblock %}
